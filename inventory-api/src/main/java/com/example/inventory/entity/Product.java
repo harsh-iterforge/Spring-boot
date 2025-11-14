@@ -27,6 +27,6 @@ public class Product {
 
     @ManyToOne
     @JoinColumn(name = "category_id")
-    @JsonBackReference  // <-- Prevent infinite recursion
+    @JsonBackReference
     private Category category;
 }
