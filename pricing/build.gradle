@@ -1,7 +1,17 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.yaml:snakeyaml:2.2'
+    }
+}
+
 plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.7'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.openapi.generator' version '7.9.0'
 }
 
 group = 'com.example'
@@ -14,9 +24,21 @@ java {
     }
 }
 
+/*
+ * NOTE: use resolutionStrategy.force(...) at the configuration level to pin versions.
+ * Do NOT call `force` directly inside the configuration closure (that caused your error).
+ */
 configurations {
     compileOnly {
         extendsFrom annotationProcessor
+        // don't call force(...) here
+    }
+}
+
+// force a specific version project-wide (if needed)
+configurations.all {
+    resolutionStrategy {
+        force 'org.yaml:snakeyaml:2.2'
     }
 }
 
@@ -33,6 +55,15 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'org.yaml:snakeyaml:2.2'
+    implementation 'io.github.openfeign:feign-slf4j:12.3'
+    implementation 'io.github.openfeign:feign-okhttp:12.3'
+
+
+    implementation 'org.openapitools:jackson-databind-nullable:0.2.4'
+    implementation 'io.swagger.core.v3:swagger-annotations:2.2.22'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'com.h2database:h2'
     annotationProcessor 'org.projectlombok:lombok'
@@ -49,3 +80,33 @@ dependencyManagement {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+// -------------- OpenAPI generator config --------------
+openApiGenerate {
+    generatorName = "spring"
+
+    // Use a proper file:/// URI so the OpenAPI parser accepts it on Windows:
+    inputSpec = file('api-specs/api.yaml').toURI().toString()
+
+    outputDir = file("$buildDir/generated").absolutePath
+    apiPackage = "com.example.userservice.api"
+    modelPackage = "com.example.userservice.model"
+
+    globalProperties = [
+            apis: "",
+            models: "",
+            supportingFiles: "ApiUtil.java"
+    ]
+
+    configOptions = [
+            interfaceOnly: "true",
+            useSpringBoot3: "true",
+            skipDefaultInterface: "false"
+    ]
+
+    // you can toggle this, but it's safer to keep validation enabled once refs are correct
+    validateSpec = false
+}
+
+compileJava.dependsOn tasks.openApiGenerate
+sourceSets.main.java.srcDirs += files("$buildDir/generated/src/main/java")

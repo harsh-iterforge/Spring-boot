@@ -24,6 +24,7 @@ public class PricingController {
             PricingRequest.LineItem item = request.getCart().get(0);
             PricingResponse resp = engine.calculateUnitPrice(item.getProductId(), item.getPrice(),
                     item.getQuantity(), request.getCouponCode(), request.getCustomerSegment());
+            System.out.println(item.getProductId());
             return ResponseEntity.ok(resp);
         }
 
