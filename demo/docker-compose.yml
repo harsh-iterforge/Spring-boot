@@ -1,0 +1,11 @@
+version: "3.9"
+services:
+  sftp:
+    image: atmoz/sftp:latest
+    container_name: local_sftp
+    ports:
+      - "2222:22"
+    volumes:
+      - ./sftp-data/harsh/upload:/home/harsh/upload
+    command: harsh:password:1001
+    restart: unless-stopped
